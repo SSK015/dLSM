@@ -26,8 +26,8 @@ PosixEnv::PosixEnv()
       NULL,  /* dev_name */
       NULL,  /* server_name */
       19843, /* tcp_port */
-      1,	 /* ib_port */ //physical
-      1, /* gid_idx */
+      2,	 /* ib_port */ //physical
+      0, /* gid_idx */
       4*10*1024*1024 /*initial local buffer size*/
   };
   size_t remote_block_size = RDMA_WRITE_BLOCK;

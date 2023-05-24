@@ -1885,7 +1885,7 @@ int RDMA_Manager::modify_qp_to_rtr(struct ibv_qp* qp, uint32_t remote_qpn,
   attr.ah_attr.port_num = rdma_config.ib_port;
   if (rdma_config.gid_idx >= 0) {
     attr.ah_attr.is_global = 1;
-    attr.ah_attr.port_num = 1;
+    attr.ah_attr.port_num = 2;
     memcpy(&attr.ah_attr.grh.dgid, dgid, 16);
     attr.ah_attr.grh.flow_label = 0;
     attr.ah_attr.grh.hop_limit = 0xFF;
@@ -2728,6 +2728,7 @@ int RDMA_Manager::poll_completion(ibv_wc* wc_p, int num_entries,
   // gettimeofday(&cur_time, NULL);
   // start_time_msec = (cur_time.tv_sec * 1000) + (cur_time.tv_usec / 1000);
   std::shared_lock<std::shared_mutex> l(qp_cq_map_mutex);
+  printf("%s\n", qp_type);
   if (qp_type == "write_local_flush"){
     cq = (ibv_cq*)cq_local_write_flush.at(target_node_id)->Get();
     assert(cq != nullptr);

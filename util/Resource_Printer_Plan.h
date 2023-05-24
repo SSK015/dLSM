@@ -14,8 +14,8 @@
 //#include "sys/vtimes.h"
 #include "cassert"
 
-#define NUMA_CORE_NUM 8
-#define COMPUTE_NUMA_CORE_NUM 152
+#define NUMA_CORE_NUM 2
+#define COMPUTE_NUMA_CORE_NUM 32
 #define CPU_UTILIZATION_CACULATE_INTERVAL 25 // in miliseconds.
 #define CALCULATE_MAX_UTIL
 class Resource_Printer_PlanA {

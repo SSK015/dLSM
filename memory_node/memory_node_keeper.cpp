@@ -37,7 +37,7 @@ TimberSaw::Memory_Node_Keeper::Memory_Node_Keeper(bool use_sub_compaction,
         NULL,  /* server_name */
       tcp_port, /* tcp_port */
         1,	 /* ib_port */
-        1, /* gid_idx */
+        0, /* gid_idx */
         0};
     //  size_t write_block_size = 4*1024*1024;
     //  size_t read_block_size = 4*1024;
@@ -1403,10 +1403,15 @@ Status Memory_Node_Keeper::InstallCompactionResultsToComputePreparation(
     rdma_mg->connection_counter.fetch_add(1);
 //    std::thread* thread_sync;
     printf("\ncheckpoint4\n");
+    printf("%d\n", rdma_mg->connection_counter.load());
+    printf("%d\n", rdma_mg->compute_nodes.size());
+    printf("%d\n", rdma_mg->node_id);
     if (rdma_mg->connection_counter.load() == rdma_mg->compute_nodes.size()
         && rdma_mg->node_id == 0){
+	    printf("1\n");
       std::thread thread_sync(&RDMA_Manager::sync_with_computes_Mside, rdma_mg.get());
       //Need to be detached.
+      printf("1\n");
       thread_sync.detach();
     }
     //  if(poll_completion(wc, 2, client_ip))
@@ -1429,7 +1434,9 @@ Status Memory_Node_Keeper::InstallCompactionResultsToComputePreparation(
     // directly start the heart beat from the remote memory side, when all the connection to
     // the compute nodes are ready.
     if (rdma_mg->connection_counter.load() == rdma_mg->compute_nodes.size()){
-      create_cpu_util_heart_beater_sender();
+      printf("1\n");
+	    create_cpu_util_heart_beater_sender();
+      printf("1\n");
     }
 
     int buffer_position = 0;
@@ -1787,20 +1794,31 @@ int Memory_Node_Keeper::server_sock_connect(const char* servername, int port) {
       int print_counter = 0;
       //TODO: REmember to recover the while loop and the continue code below.
       while (1){
+      //printf("before_cpu_util");
         double cpu_util_percentage = rdma_mg->rpter.getCurrentValue();
-        if (cpu_util_percentage <0){
+	//printf("%lf\n", cpu_util_percentage);
+        //printf("cpu_util_ok!\n");
+	if (cpu_util_percentage <0){
           continue;
-        }
+        
+	  
+	  }
+	  //printf("before for\n");
         for (auto iter : rdma_mg->compute_nodes) {
           // register the memory block from the remote memory
+	  //printf("enter for\n");
           RDMA_Request* send_pointer;
+	  //printf("send_pointer\n");
           ibv_mr send_mr = {};
+	  //printf("send_mr\n");
+	  //printf("whyyy!\n");
           rdma_mg->Allocate_Local_RDMA_Slot(send_mr, Message);
-
+	  //printf("yyywh?\n");
           send_pointer = (RDMA_Request*)send_mr.addr;
           send_pointer->command = cpu_utilization_heartbeat;
           send_pointer->content.cpu_info.cpu_util = cpu_util_percentage;
           send_pointer->content.cpu_info.core_number = rdma_mg->rpter.numa_bind_core_num;
+	  //printf("tadoritsita\n");
 //#ifndef NDEBUG
           if (print_counter++ == 200){
             printf("Current cpu utilization is %f\n", cpu_util_percentage);
@@ -1808,15 +1826,16 @@ int Memory_Node_Keeper::server_sock_connect(const char* servername, int port) {
           }
 //#endif
 
-
-          rdma_mg->post_send<RDMA_Request>(&send_mr, iter.first, std::string("main"));
+//iter.first
+          rdma_mg->post_send<RDMA_Request>(&send_mr, 1, std::string("main"));
           ibv_wc wc[2] = {};
+	  //printf("RDMArequestWIN!!!!\n");
           if (rdma_mg->poll_completion(wc, 1, std::string("main"), true,
                                        iter.first)){
             fprintf(stderr, "failed to poll send for remote memory register\n");
             return ;
           }
-
+	//printf("Iwanttodieandchongtouzailai\n");
         }
         std::this_thread::sleep_for(std::chrono::milliseconds(CPU_UTILIZATION_CACULATE_INTERVAL));
       }
